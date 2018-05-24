@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 MOTOR_PIN = 18
 BUTTON_PIN = 25
-KILL_TIME = 5
+KILL_TIME = 4
 LOG_FILE = "/home/pi/tmp/feeder.log"
 CAPTURE_DIR = "/home/pi/tmp/"
 INFO_FILE = "/home/pi/Documents/feeder_info.log"
@@ -48,13 +48,50 @@ def turn_motor_on_off(kill_time=KILL_TIME):
     log.info("MOTOR ON: {:.2f} seconds".format(time.time() - init_time))
     turn_motor_off()
 
+#def turn_feeder(kill_time=KILL_TIME):
+#	camera = setup_camera()
+#	setup_feeder()
+#	log.debug("Turning feeder until button press or for {} secs".format(kill_time))
+#	capture(camera, get_file_path())
+#	turn_motor_on_off(kill_time=kill_time)
+#	time.sleep(1)
+#	capture(camera, get_file_path())
+
 def turn_feeder(kill_time=KILL_TIME):
 	camera = setup_camera()
 	setup_feeder()
-	log.debug("Turning feeder until button press or for {} secs".format(kill_time))
 	capture(camera, get_file_path())
-	turn_motor_on_off(kill_time=kill_time)
+	turn_feeder_half_cycle(kill_time=kill_time)
+	time.sleep(1)
 	capture(camera, get_file_path())
+
+def turn_feeder_half_cycle(kill_time=KILL_TIME):
+    state = State(get_button_state())
+    if state.state == State.INIT_PRESS:
+        turn_feeder_until_state(State.OPEN, kill_time, state_plus_time=0.2)
+    elif state.state == State.OPEN:
+        turn_feeder_until_state(State.FINAL_PRESS, kill_time, state_plus_time=None)
+    else:
+        log.error("UNKNOWN INIT STATE ERROR {}".format(state))
+
+def turn_feeder_until_state(final_state, kill_time, state_plus_time=None):
+    state = State(get_button_state())
+    log.debug("current state: {}, final requested state {}. extra time {}".format(state.state, final_state, state_plus_time))
+    init_time = time.time()
+    turn_motor_on()
+    while state.state != final_state:
+        if time.time() - init_time > kill_time:
+            log.error("Kill time {} elapsed.  switch state {}. Killing motor".format(kill_time, state.state))
+            turn_motor_off()
+            return
+        state.change_state(get_button_state())
+        time.sleep(0.1)
+    if state_plus_time:
+        log.debug("sleeping past {} for time {}".format(state.state, state_plus_time))
+        time.sleep(state_plus_time)
+    log.info("MOTOR ON: {:.2f} seconds".format(time.time() - init_time))
+    turn_motor_off()
+
 
 
 ######### CAMERA ########
@@ -63,7 +100,7 @@ def turn_feeder(kill_time=KILL_TIME):
 def setup_camera():
 	log.debug("setting up camera ... ")
 	camera = picamera.PiCamera()
-	camera.brightness = 70
+	camera.brightness = 80
 	camera.iso = 1600
 	camera.shutter_speed = camera.exposure_speed
 	camera.start_preview()
@@ -96,11 +133,16 @@ def set_logging(log_file=LOG_FILE, info_file=INFO_FILE):
 	root_logger.addHandler(info_hdlr)
 	root_logger.setLevel(logging.DEBUG)
 
+#if __name__ == "__main__":
+#	import sys
+#	set_logging()
+#	if len(sys.argv) == 1:
+#		turn_feeder(kill_time=KILL_TIME)
+#	elif len(sys.argv) > 1:
+#		turn_feeder(kill_time=float(sys.argv[1]))
+
 if __name__ == "__main__":
 	import sys
 	set_logging()
-	if len(sys.argv) == 1:
-		turn_feeder(kill_time=KILL_TIME)
-	elif len(sys.argv) > 1:
-		turn_feeder(kill_time=float(sys.argv[1]))
+	turn_feeder()
 
