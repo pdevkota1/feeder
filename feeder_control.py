@@ -59,7 +59,7 @@ def turn_feeder(kill_time=KILL_TIME, retry_min=RETRY_MIN):
     capture(camera, get_file_path())
     time_elapsed = turn_feeder_half_cycle(kill_time=kill_time)
     while time_elapsed < retry_min:
-        log.error("ERROR: Motor on for {} which is less than retry time {}.  Retrying ... ".
+        log.error("ERROR: Motor on for {:.2f} which is less than retry time {}.  Retrying ... ".
                   format(time_elapsed, retry_min))
         time.sleep(1)
         time_elapsed = turn_feeder_half_cycle(kill_time=kill_time)
@@ -87,7 +87,7 @@ def turn_feeder_until_state(final_state, kill_time, state_plus_time=None):
         if time.time() - init_time > kill_time:
             log.error("Kill time {} elapsed.  switch state {}. Killing motor".format(kill_time, state.state))
             turn_motor_off()
-            return
+            return kill_time
         state.change_state(get_button_state())
         time.sleep(0.1)
     if state_plus_time:
