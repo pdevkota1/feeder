@@ -5,6 +5,7 @@ import datetime
 import logging
 import picamera
 import os.path
+from publisher import FeederPublisher
 
 log = logging.getLogger(__name__)
 
@@ -96,6 +97,7 @@ def turn_feeder_until_state(final_state, kill_time, state_plus_time=None):
     time_elapsed = time.time() - init_time
     log.info("MOTOR ON: {:.2f} seconds".format(time_elapsed))
     turn_motor_off()
+    FeederPublisher().publish(["{:.2f}".format(time_elapsed)])
     return time_elapsed
 
 
