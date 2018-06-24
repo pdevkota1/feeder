@@ -21,7 +21,7 @@ class FeederSubscriberCallback(MySubscribeCallback):
     def get_token_key(self):
         config = configparser.ConfigParser()
         config.read(CONFIG_PATH)
-        return config["pubnub"]["feed_key"]
+        return config["pubnub"]["feed_key"].strip()
 
     def message(self, pubnub, message):
         try:
