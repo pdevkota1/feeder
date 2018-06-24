@@ -5,6 +5,8 @@ import datetime
 import logging
 import picamera
 import os.path
+from publisher import FeederPublisher
+from log_setting import set_logging
 
 log = logging.getLogger(__name__)
 
@@ -94,8 +96,9 @@ def turn_feeder_until_state(final_state, kill_time, state_plus_time=None):
         log.debug("sleeping past {} for time {}".format(state.state, state_plus_time))
         time.sleep(state_plus_time)
     time_elapsed = time.time() - init_time
-    log.info("MOTOR ON: {:.2f} seconds".format(time_elapsed))
     turn_motor_off()
+    log.info("MOTOR ON: {:.2f} seconds".format(time_elapsed))
+    FeederPublisher().publish(["{:.2f}".format(time_elapsed)])
     return time_elapsed
 
 
@@ -125,20 +128,7 @@ def get_file_path(root_dir=CAPTURE_DIR):
     return os.path.join(dst_dir, datetime.datetime.now().strftime("%H_%M_%S")) + ".jpg"
 
 
-######## MAIN ########
-
-def set_logging(log_file=LOG_FILE, info_file=INFO_FILE):
-    root_logger = logging.getLogger()
-    debug_hdlr = logging.FileHandler(log_file)
-    info_hdlr = logging.FileHandler(info_file)
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    debug_hdlr.setFormatter(formatter)
-    debug_hdlr.setLevel(logging.DEBUG)
-    info_hdlr.setFormatter(formatter)
-    info_hdlr.setLevel(logging.INFO)
-    root_logger.addHandler(debug_hdlr)
-    root_logger.addHandler(info_hdlr)
-    root_logger.setLevel(logging.DEBUG)
+######## MAIN #######
 
 
 if __name__ == "__main__":
