@@ -3,8 +3,11 @@ from publisher import MySubscribeCallback
 import logging
 import datetime
 from feeder_control import turn_feeder
+import configparser
+import os
 
 log = logging.getLogger(__name__)
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "feeder.ini")
 
 
 def subscribe():
@@ -15,7 +18,10 @@ def subscribe():
 
 class FeederSubscriberCallback(MySubscribeCallback):
 
-    TOKEN_KEY = "feedher"
+    def get_token_key(self):
+        config = configparser.ConfigParser()
+        config.read(CONFIG_PATH)
+        return config["pubnub"]["feed_key"]
 
     def message(self, pubnub, message):
         try:
@@ -33,7 +39,7 @@ class FeederSubscriberCallback(MySubscribeCallback):
         log.debug("difference in time is {}".format(time_diff))
         log.debug("received at {}".format(received_time))
         token_value = message.message["token"]
-        if token_value == self.TOKEN_KEY and time_diff < datetime.timedelta(minutes=1):
+        if token_value == self.get_token_key() and time_diff < datetime.timedelta(minutes=1):
             log.info("time to feed")
             turn_feeder()
         else:
