@@ -67,6 +67,7 @@ def turn_feeder(kill_time=KILL_TIME, retry_min=RETRY_MIN):
         time_elapsed = turn_feeder_half_cycle(kill_time=kill_time)
     time.sleep(1)
     capture(camera, get_file_path())
+    camera.close()
 
 
 def turn_feeder_half_cycle(kill_time=KILL_TIME):
