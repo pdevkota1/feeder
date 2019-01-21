@@ -1,4 +1,5 @@
 from pubnub.pnconfiguration import PNConfiguration
+from pubnub.enums import PNReconnectionPolicy
 from pubnub.pubnub import PubNub
 from pubnub.callbacks import SubscribeCallback
 import logging
@@ -17,6 +18,7 @@ class FeederPublisher(object):
         config.read(ini_path)
         self.pnconfig.subscribe_key = config["pubnub"]["subscribe_key"]
         self.pnconfig.publish_key = config["pubnub"]["publish_key"]
+        self.pnconfig.reconnect_policy = PNReconnectionPolicy.LINEAR
         self.pubnub = PubNub(self.pnconfig)
         self.channel = channel
         if listener_callback:
